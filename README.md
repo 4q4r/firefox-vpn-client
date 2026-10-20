@@ -133,8 +133,9 @@ firefox-vpn-client/
 
 ## 🔐 Authentication
 
-The FxA flow in `fxa.go` mirrors the onewire protocol Firefox Accounts expects from a
-non-browser client:
+The FxA flow in `fxa.go` implements the login sequence Firefox Accounts expects
+from a non-browser client, keyed to the account API's
+`identity.mozilla.com/picl/v1/` password-stretching identifiers:
 
 1. **Password stretching** — the password is never sent. It is stretched with
    PBKDF2-SHA256 (1000 rounds) into a `quickStretchedPW` salted with the account
@@ -224,8 +225,8 @@ Selection rules (from `cmd/proxy-demo/main.go`):
   upstream and is mutually exclusive with `-country`.
 - With neither flag set: exactly one available country auto-selects; multiple
   countries abort startup with
-  `multiple VPN countries are available; pass -country CODE or -proxy HOST:PORT` —
-  the client never picks a random country.
+  `multiple VPN countries are available; pass -country CODE or -proxy HOST:PORT
+  instead of selecting a random country`.
 - `-proxy-state-file` persists the chosen upstream (hostname plus location
   metadata) and reuses it on the next start. The selection is cleared only after 3
   consecutive startup failures. Persistence is best-effort hostname reuse: it does
@@ -357,13 +358,16 @@ Configure any SOCKS5-capable client to use `127.0.0.1:9999` and check the startu
 logs:
 
 ```text
-INFO  SOCKS5 proxy started listen=127.0.0.1:9999 upstream=... proxy_pass_exp=...
-INFO  upstream selected configured_country="United States" ... selection_source=configured_country ...
+INFO  SOCKS5 proxy started listen=127.0.0.1:9999 upstream=<upstream host:port> auth_source="refresh token" proxy_pass_exp=<RFC3339 expiry> ...
+INFO  upstream selected configured_country="United States" configured_country_code=US ...
 INFO  exit verified ip=203.0.113.10 country_code=US data_path_probe_latency=241ms probe_host=www.cloudflare.com
 ```
 
-`exit verified` is the data-plane truth: the public exit actually observed through
-the tunnel.
+The first two lines are abridged (fields continue in the real output); every
+shown field group is complete and in the emitted order
+(`cmd/proxy-demo/main.go` `SOCKS5 proxy started` and `upstream selected` log
+calls). `exit verified` is shown in full and is the data-plane truth: the public
+exit actually observed through the tunnel.
 
 ---
 
