@@ -189,7 +189,9 @@ with an empty HTTP 406 client challenge. `fastly.go` solves it automatically:
 ## 🎟️ Guardian Proxy Passes
 
 `guardian.go` talks to the Guardian API (`https://vpn.mozilla.org` by default,
-overridable with `-guardian`):
+overridable with `-guardian`). Every Guardian request carries the account's
+bearer token, so a custom `-guardian` value must be an absolute `https://` URL —
+a non-HTTPS endpoint would transmit that token in cleartext:
 
 | Endpoint | Method | Purpose |
 | :-- | :-- | :-- |
@@ -296,7 +298,7 @@ All flags from `cmd/proxy-demo/main.go`:
 | `-print-info` | `false` | Print user info, quota info, and server list, then exit |
 | `-session-token` | *(empty)* | Session token, or path to a `.txt` file with one token per line; tokens rotate automatically when their monthly quota runs out |
 | `-api-proxy` | *(empty)* | Optional HTTP/HTTPS/SOCKS5 proxy for Firefox Accounts, Guardian, and Remote Settings API requests |
-| `-guardian` | `https://vpn.mozilla.org` | Guardian API endpoint |
+| `-guardian` | `https://vpn.mozilla.org` | Guardian API endpoint; a custom value must be an absolute `https://` URL (every request carries the account bearer token) |
 | `-timeout` | `20s` | Upstream dial and handshake timeout |
 | `-handshake-timeout` | `10s` | Maximum time for a client SOCKS5 handshake; `0` disables the limit |
 | `-idle-timeout` | `0` | Maximum idle time for an established tunnel; `0` disables the limit |
